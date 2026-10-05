@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API 试电笔</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">⚡</div>
+      <div class="brand-txt">
+        <div class="brand-name">API 试电笔</div>
+        <div class="brand-sub">OpenAI Compatible Tester</div>
+      </div>
+    </div>
+
+    <div class="side-head">
+      <span class="side-title">API 配置</span>
+      <button class="btn ghost xs" id="btnNewConfig">＋ 新建</button>
+    </div>
+    <div class="cfg-list" id="cfgList"></div>
+
+    <div class="side-foot">
+      <button class="btn ghost xs" id="btnTheme">🌙 深色</button>
+      <span class="ver" id="verTag">v1.0.0</span>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-tab="test">测试</button>
+        <button class="tab" data-tab="chat">聊天</button>
+        <button class="tab" data-tab="logs">日志</button>
+      </div>
+      <div class="top-right">
+        <span class="pill" id="activePill">未选择配置</span>
+        <span class="dot idle" id="healthDot" title="就绪"></span>
+      </div>
+    </header>
+
+    <div class="panes">
+
+      <!-- ================= 测试 ================= -->
+      <section class="pane active" id="pane-test">
+        <div class="grid2">
+
+          <div class="card" id="cfgCard">
+            <div class="card-head">
+              <h2>API 配置</h2>
+              <div class="head-actions">
+                <button class="btn ghost xs" id="btnDelConfig">删除配置</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <label class="field">
+                <span class="lbl">名称</span>
+                <input type="text" id="fName" placeholder="例如 OpenRouter" autocomplete="off">
+              </label>
+              <label class="field">
+                <span class="lbl">Base URL</span>
+                <input type="text" id="fBase" placeholder="https://example.com 或 https://example.com/v1" autocomplete="off" spellcheck="false">
+                <span class="hint" id="baseHint"></span>
+              </label>
+              <label class="field">
+                <span class="lbl">API Key</span>
+                <span class="pw">
+                  <input type="password" id="fKey" placeholder="sk-..." autocomplete="off" spellcheck="false">
+                  <button class="eye" id="btnEye" type="button" title="显示/隐藏">👁</button>
+                </span>
+              </label>
+              <label class="field">
+                <span class="lbl">代理（可选）</span>
+                <input type="text" id="fProxy" placeholder="http://127.0.0.1:7890" autocomplete="off" spellcheck="false">
+              </label>
+
+              <div class="field">
+                <span class="lbl">模型
+                  <span class="lbl-actions">
+                    <button class="btn ghost xs" id="btnModels">获取模型</button>
+                    <span class="model-count" id="modelCount"></span>
+                  </span>
+                </span>
+                <div class="model-pick">
+                  <span class="pw">
+                    <input type="text" id="fModel" placeholder="点击「获取模型」，或直接手动输入模型 ID" autocomplete="off" spellcheck="false">
+                    <button class="eye hidden" id="btnClearModel" type="button" title="清除已选模型">✕</button>
+                  </span>
+                  <button class="picker-toggle" id="btnModelPicker" type="button" title="模型列表">▾</button>
+                  <div class="picker hidden" id="modelPicker">
+                    <div class="picker-head">
+                      <input type="text" id="modelSearch" placeholder="搜索模型…" autocomplete="off" spellcheck="false">
+                      <button class="btn ghost xs" id="btnAddModel" type="button" title="把输入框里的模型 ID 加进列表">＋ 添加</button>
+                      <button class="btn ghost xs" id="btnShowHidden" type="button">显示已删除</button>
+                    </div>
+                    <div class="picker-list" id="modelPickerList"></div>
+                  </div>
+                </div>
+                <span class="hint" id="modelHint">部分 API 的 /models 不可用，可直接手动输入模型 ID。</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>一键测试</h2>
+              <div class="head-actions">
+                <label class="switch"><input type="checkbox" id="fStream" checked><span></span>Streaming</label>
+              </div>
+            </div>
+            <div class="card-body">
+              <label class="field">
+                <span class="lbl">测试 Prompt</span>
+                <textarea id="fPrompt" rows="3" spellcheck="false">只回复 OK</textarea>
+              </label>
+              <div class="field">
+                <span class="lbl">连续测试次数</span>
+                <div class="seg" id="segCount">
+                  <button data-n="1" class="on">1</button>
+                  <button data-n="5">5</button>
+                  <button data-n="10">10</button>
+                  <button data-n="20">20</button>
+                  <button data-n="50">50</button>
+                </div>
+              </div>
+              <div class="actions">
+                <button class="btn primary lg" id="btnTest">测试 API</button>
+                <button class="btn ghost" id="btnStop" disabled>停止</button>
+                <button class="btn ghost" id="btnCurl">复制 Curl</button>
+              </div>
+              <div class="progress"><div class="bar" id="progBar"></div></div>
+            </div>
+          </div>
+
+          <div class="card span2" id="resultCard">
+            <div class="card-head">
+              <h2>最近一次结果</h2>
+              <div class="head-actions">
+                <span class="badge" id="resBadge">未测试</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="metrics" id="metrics">
+                <div class="metric"><div class="m-lbl">TTFT</div><div class="m-val" id="mTtft">—</div><div class="m-sub">首 Token 延迟</div></div>
+                <div class="metric"><div class="m-lbl">总响应时间</div><div class="m-val" id="mTotal">—</div><div class="m-sub">请求 → 结束</div></div>
+                <div class="metric"><div class="m-lbl">Tokens/s</div><div class="m-val" id="mTps">—</div><div class="m-sub" id="mTpsSub">输出速度</div></div>
+                <div class="metric"><div class="m-lbl">HTTP</div><div class="m-val" id="mStatus">—</div><div class="m-sub">状态码</div></div>
+                <div class="metric"><div class="m-lbl">输入 Token</div><div class="m-val" id="mIn">—</div><div class="m-sub">prompt</div></div>
+                <div class="metric"><div class="m-lbl">输出 Token</div><div class="m-val" id="mOut">—</div><div class="m-sub">completion</div></div>
+                <div class="metric"><div class="m-lbl">总 Token</div><div class="m-val" id="mTot">—</div><div class="m-sub">total</div></div>
+                <div class="metric"><div class="m-lbl">字符数</div><div class="m-val" id="mChars">—</div><div class="m-sub">响应文本</div></div>
+              </div>
+              <div class="resp" id="resText"></div>
+              <div class="errbox hidden" id="errBox"></div>
+            </div>
+          </div>
+
+          <div class="card span2" id="stabCard">
+            <div class="card-head">
+              <h2>稳定性</h2>
+              <div class="head-actions"><span class="badge" id="stabBadge">无数据</span></div>
+            </div>
+            <div class="card-body">
+              <div class="stats" id="stats"></div>
+              <canvas id="chart" height="120"></canvas>
+              <div class="table-wrap">
+                <table class="tbl" id="stabTbl">
+                  <thead><tr><th>#</th><th>结果</th><th>HTTP</th><th>TTFT</th><th>总耗时</th><th>Tokens/s</th><th>备注</th></tr></thead>
+                  <tbody id="stabBody"><tr class="empty"><td colspan="7">还没有测试数据</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= 聊天 ================= -->
+      <section class="pane" id="pane-chat">
+        <div class="card chat-card">
+          <div class="card-head">
+            <h2>极简聊天</h2>
+            <div class="head-actions">
+              <input class="sys" id="fSystem" placeholder="system 提示词（可选）" spellcheck="false">
+              <button class="btn ghost xs" id="btnRegen">重新生成</button>
+              <button class="btn ghost xs" id="btnClearChat">清空对话</button>
+            </div>
+          </div>
+          <div class="chat-body" id="chatBody">
+            <div class="chat-empty" id="chatEmpty">发一条消息，验证模型是否真的能用。</div>
+          </div>
+          <div class="composer">
+            <textarea id="chatInput" rows="1" placeholder="输入消息，Enter 发送，Shift+Enter 换行"></textarea>
+            <button class="btn primary" id="btnSend">发送</button>
+            <button class="btn ghost hidden" id="btnStopChat">停止</button>
+          </div>
+          <div class="composer-foot" id="chatFoot"></div>
+        </div>
+      </section>
+
+      <!-- ================= 日志 ================= -->
+      <section class="pane" id="pane-logs">
+        <div class="card">
+          <div class="card-head">
+            <h2>请求日志</h2>
+            <div class="head-actions">
+              <span class="badge" id="logBadge">0 条</span>
+              <button class="btn ghost xs" id="btnReloadLogs">刷新</button>
+              <button class="btn ghost xs" id="btnClearLogs">清空日志</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="hint safe-hint">🔒 日志中的 API Key 已自动脱敏，绝不保存真实密钥。</div>
+            <div class="table-wrap">
+              <table class="tbl" id="logTbl">
+                <thead><tr><th>时间</th><th>配置</th><th>模型</th><th>HTTP</th><th>TTFT</th><th>总耗时</th><th>Tokens/s</th><th>结果</th></tr></thead>
+                <tbody id="logBody"><tr class="empty"><td colspan="8">暂无日志</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<div class="modal hidden" id="modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="modalTitle">请求详情</h3>
+      <div class="head-actions">
+        <button class="btn ghost xs" id="btnModalCurl">复制 Curl</button>
+        <button class="btn ghost xs" id="btnModalClose">关闭</button>
+      </div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+<script src="/app.js"></script>
+</body>
+</html>
